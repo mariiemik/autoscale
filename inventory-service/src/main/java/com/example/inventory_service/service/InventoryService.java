@@ -1,12 +1,15 @@
 package com.example.inventory_service.service;
 
-import com.example.common.events.*;
+import com.example.common.events.OrderItemEvent;
 import com.example.inventory_service.dto.InventoryItemResponseDTO;
 import com.example.inventory_service.exception.InvalidItemQuantityException;
 import com.example.inventory_service.model.InventoryItemModel;
 import com.example.inventory_service.repository.InventoryItemsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,18 +30,25 @@ public class InventoryService {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+    @Cacheable(value = "inventory", key = "#id")
     public Integer itemAvailability(String id) {
         Optional<InventoryItemModel> item = inventoryItemsRepository.findById(id);
         return item.orElseThrow().getQuantity();
     }
 
+    @Cacheable(value = "inventory_all")
     public List<InventoryItemResponseDTO> alItemsAvailability() {
         log.info("alItemsAvailability() method in InventoryService");
         return inventoryItemsRepository.findAll().stream().map(x -> new InventoryItemResponseDTO(x.getInventoryItemId(), x.getName(), x.getQuantity(), x.getPrice())).toList();
     }
 
 
+
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "inventory", key = "#id"),
+            @CacheEvict(value = "inventory_all", allEntries = true)
+    })
     public void reserveItem(String id, int reservedQuantity) {
         log.info("reserveItem() method in InventoryService");
         Optional<InventoryItemModel> inventoryItemModel = inventoryItemsRepository.findById(id);
@@ -54,6 +64,7 @@ public class InventoryService {
 
     }
 
+
     @Transactional
     public void reserveOrderItems(List<OrderItemEvent> items) {
         log.info("reserveOrderItems() method in InventoryService");
@@ -64,6 +75,10 @@ public class InventoryService {
     }
 
 
+    @Caching(evict = {
+            @CacheEvict(value = "inventory", key = "#id"),
+            @CacheEvict(value = "inventory_all", allEntries = true)
+    })
     @Transactional
     public void cancelItemReserve(String id, int reservedQuantity) {
         log.info("cancelItemReserve() method in InventoryService");
@@ -81,6 +96,10 @@ public class InventoryService {
 
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "inventory", key = "#id"),
+            @CacheEvict(value = "inventory_all", allEntries = true)
+    })
     @Transactional
     public void subtractBoughtItem(String id, int quantity) {
         log.info("subtractBoughtItem() method in InventoryService");

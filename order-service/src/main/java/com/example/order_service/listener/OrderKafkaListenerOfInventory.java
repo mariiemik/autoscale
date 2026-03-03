@@ -5,6 +5,8 @@ import com.example.common.events.ItemsReservationCancelledEvent;
 import com.example.order_service.service.OrderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -22,10 +24,17 @@ public class OrderKafkaListenerOfInventory {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final OrderService orderService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final Timer eventProcessingTimer;
 
-    OrderKafkaListenerOfInventory(OrderService orderService, KafkaTemplate<String, Object> kafkaTemplate) {
+    OrderKafkaListenerOfInventory(OrderService orderService,
+                                  KafkaTemplate<String, Object> kafkaTemplate, MeterRegistry registry) {
         this.orderService = orderService;
         this.kafkaTemplate = kafkaTemplate;
+        this.eventProcessingTimer = Timer.builder("event_processing_seconds")
+                .description("Time to process one Kafka event")
+                .tag("service", "order-service")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(registry);
     }
 
 
@@ -44,9 +53,9 @@ public class OrderKafkaListenerOfInventory {
 //                ItemsReservationCancelledEvent itemsReservationCancelledEvent = objectMapper.treeToValue(rootNode, ItemsReservationCancelledEvent.class);
                 ItemsReservationCancelledEvent itemsReservationCancelledEvent = objectMapper.convertValue(rawEvent, ItemsReservationCancelledEvent.class);
                 log.debug("обработка события ITEM_RESERVATION_CANCELLED ");
-
-                orderService.cancelOrder(itemsReservationCancelledEvent.getOrderId());
-
+                eventProcessingTimer.record(() ->
+                        orderService.cancelOrder(itemsReservationCancelledEvent.getOrderId())
+                );
 //                OrderCreatedEvent event = new OrderCreatedEvent(order.getOrderId(), order.getUserId(), orderItemEventList);
 //                kafkaTemplate.send("orders-topic", event.getOrderId(), event);
 //TODO увед что не хватило товара

@@ -6,6 +6,8 @@ import com.example.inventory_service.exception.InvalidItemQuantityException;
 import com.example.inventory_service.service.InventoryService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -22,10 +24,18 @@ public class InventoryKafkaListener {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final InventoryService inventoryService;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final Timer eventProcessingTimer;
 
-    InventoryKafkaListener(InventoryService inventoryService, KafkaTemplate<String, Object> kafkaTemplate) {
+
+    InventoryKafkaListener(InventoryService inventoryService, KafkaTemplate<String, Object> kafkaTemplate,
+                           MeterRegistry registry) {
         this.inventoryService = inventoryService;
         this.kafkaTemplate = kafkaTemplate;
+        this.eventProcessingTimer = Timer.builder("event_processing_seconds")
+                .description("Time to process one Kafka event")
+                .tag("service", "inventory-service")
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(registry);
     }
 
 
@@ -51,25 +61,28 @@ public class InventoryKafkaListener {
 
                     log.info("Начало обработки ORDER_CREATED: orderId={}", orderCreatedEvent.getOrderId());
 
-                    try {
-                        inventoryService.reserveOrderItems(orderCreatedEvent.getItems());
-                        ItemsReservedEvent event = new ItemsReservedEvent(orderCreatedEvent.getOrderId(), orderCreatedEvent.getItems());
-                        sendEvent("inventory-topic", orderCreatedEvent.getOrderId(), event);
-                    } catch (InvalidItemQuantityException e) {
-                        ItemsReservationCancelledEvent event = new ItemsReservationCancelledEvent(orderCreatedEvent.getOrderId(), orderCreatedEvent.getItems());
-                        sendEvent("inventory-topic", event.getOrderId(), event);
+                    eventProcessingTimer.record(() -> {
+                        try {
+                            inventoryService.reserveOrderItems(orderCreatedEvent.getItems());
+                            ItemsReservedEvent event = new ItemsReservedEvent(orderCreatedEvent.getOrderId(), orderCreatedEvent.getItems());
+                            sendEvent("inventory-topic", orderCreatedEvent.getOrderId(), event);
+                        } catch (InvalidItemQuantityException e) {
+                            ItemsReservationCancelledEvent event = new ItemsReservationCancelledEvent(orderCreatedEvent.getOrderId(), orderCreatedEvent.getItems());
+                            sendEvent("inventory-topic", event.getOrderId(), event);
 
-                    }
+                        }
+                    });
                 }
                 case ORDER_CANCELLED -> {
                     OrderCancelledEvent orderCancelledEvent = objectMapper.convertValue(rawEvent, OrderCancelledEvent.class);
                     log.debug("Обработка события ORDER_CANCELLED");
 
                     log.info("Отмена резервирования для orderId={}", orderCancelledEvent.getOrderId());
-
-                    for (OrderItemEvent itemEvent : orderCancelledEvent.getItems()) {
-                        inventoryService.cancelItemReserve(itemEvent.getItemId(), itemEvent.getQuantity());
-                    }
+                    eventProcessingTimer.record(() -> {
+                        for (OrderItemEvent itemEvent : orderCancelledEvent.getItems()) {
+                            inventoryService.cancelItemReserve(itemEvent.getItemId(), itemEvent.getQuantity());
+                        }
+                    });
 
                 }
                 case ORDER_CONFIRMED -> {
@@ -78,9 +91,11 @@ public class InventoryKafkaListener {
 
                     log.info("Подтверждение заказа orderId={}", orderConfirmedEvent.getOrderId());
 
-                    for (OrderItemEvent itemEvent : orderConfirmedEvent.getItems()) {
-                        inventoryService.subtractBoughtItem(itemEvent.getItemId(), itemEvent.getQuantity());
-                    }
+                    eventProcessingTimer.record(() -> {
+                        for (OrderItemEvent itemEvent : orderConfirmedEvent.getItems()) {
+                            inventoryService.subtractBoughtItem(itemEvent.getItemId(), itemEvent.getQuantity());
+                        }
+                    });
 
                 }
 

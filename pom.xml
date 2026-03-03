@@ -21,6 +21,20 @@
         <java.version>17</java.version>
         <spring-cloud.version>2023.0.0</spring-cloud.version>
     </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+        </dependency>
+    </dependencies>
 
     <modules>
         <module>common</module>

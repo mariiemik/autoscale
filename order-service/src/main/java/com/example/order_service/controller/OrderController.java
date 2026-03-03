@@ -1,10 +1,7 @@
 package com.example.order_service.controller;
 
-import com.example.common.exception.UserNotFoundException;
 import com.example.order_service.dto.OrderRequestDTO;
 import com.example.order_service.dto.OrderResponseDTO;
-import com.example.order_service.exception.InvalidOrderQuantityException;
-import com.example.order_service.exception.OutOfStockException;
 import com.example.order_service.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 
 @Tag(name = "Orders", description = "Управление заказами")
@@ -41,19 +37,12 @@ public class OrderController {
             @ApiResponse(responseCode = "409", description = "Недостаточно продукта на складе")
     })
     @PostMapping
-    public ResponseEntity<?> createOrder(@RequestBody @Valid OrderRequestDTO orderRequestDTO) {
+    public ResponseEntity<OrderResponseDTO> createOrder(@RequestBody @Valid OrderRequestDTO orderRequestDTO) {
         log.info("POST /orders — creating new order for user={}", orderRequestDTO.userId());
-        try {
-            OrderResponseDTO orderResponseDTO = orderService.createOrder(orderRequestDTO);
-            log.info("/order request END");
-            return ResponseEntity.status(HttpStatus.CREATED).body(orderResponseDTO);
-        } catch (InvalidOrderQuantityException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (OutOfStockException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        }
+
+        OrderResponseDTO orderResponseDTO = orderService.createOrder(orderRequestDTO);
+        log.info("/order request END");
+        return ResponseEntity.status(HttpStatus.CREATED).body(orderResponseDTO);
     }
 
     @Operation(summary = "Получить заказ по ID", description = "Возвращает детали конкретного заказа")
@@ -62,20 +51,14 @@ public class OrderController {
             @ApiResponse(responseCode = "404", description = "Неверный id продукта"),
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getOrder(
+    public ResponseEntity<OrderResponseDTO> getOrder(
             @Parameter(description = "ID заказа", required = true)
             @PathVariable String id) {
         log.info("/order/{id} request START");
 
-        try {
-            OrderResponseDTO response = orderService.getOrderById(id);
-            log.info("/order/{id} request END");
-            return ResponseEntity.ok(response);
-
-        } catch (NoSuchElementException e) {
-            log.error("Product with id not found");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        OrderResponseDTO response = orderService.getOrderById(id);
+        log.info("/order/{id} request END");
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Список всех заказов", description = "Возвращает список всех заказов, но без продуктов в заказе")
