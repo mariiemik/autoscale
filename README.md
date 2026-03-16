@@ -2,40 +2,40 @@
 
 MSA система для обработки заказов, платежей, управления складом, пользователями, уведомлениями.
 
-### 1. API Gateway
+### 1. API Gateway (8080)
 
-### 2. Order Service
+### 2. Order Service (8087)
 
 - `POST /order`
 - `GET /order/{id}`
 - `GET /order`
 
-### 3. Payment Service
+### 3. Payment Service (8082)
 
 - `POST /payment`
 - `GET /payment/{id}`
 
-### 4. External Payment Gateway
+### 4. External Payment Gateway (8083)
 
 - `POST /pay`
 
-### 5. Inventory Service
+### 5. Inventory Service (8084)
 
 - `POST /inventory/reserve`
 - `POST /inventory/cancel_reserve`
 - `GET /inventory/{id}` — наличие товара
 - `GET /inventory` — все доступные товары
 
-### 6. User Service
+### 6. User Service (8088)
 
 - `POST /user`
 - `GET /user/{id}`
 
-### 7. Notification Service
+### 7. Notification Service (8085)
 
 - `POST /notification`
 
-### 8. Analytics Service
+### 8. Analytics Service (8089)
 
 Пока в разработке
 

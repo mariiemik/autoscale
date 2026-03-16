@@ -17,7 +17,7 @@ import java.util.Map;
 @EnableKafka
 public class KafkaProducerConfig {
 
-    private final String bootstrapAddress = "localhost:9092";
+    private final String bootstrapAddress = "kafka:9092";
 
     //    private final String bootstrapAddress = "host.docker.internal:9092"; /// Сейчас это для кафки запущенной докером и сервисы локально
     @Bean

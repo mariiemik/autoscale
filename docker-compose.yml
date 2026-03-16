@@ -1,8 +1,6 @@
 services:
-
-
   # =======================================================
-  # БАЗЫ ДАННЫХ (Databases)
+  # БАЗЫ ДАННЫХ
   # =======================================================
   user-db:
     image: postgres:15
@@ -53,7 +51,7 @@ services:
       - payment-db-data:/var/lib/postgresql/data
 
   # =======================================================
-  # 3. БРОКЕР СООБЩЕНИЙ (Kafka)
+  # Kafka + Redis
   # =======================================================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
@@ -70,30 +68,15 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092" # Открываем внешний порт Kafka
-    #      - "9999:9999"        # JMX port для Prometheus
+      - "9092:9092"
 
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # Внешний слушатель для доступа из Spring Boot сервисов (localhost:29092)
-      #      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,EXTERNAL://localhost:9092
-      #      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      # Слушаем 29092 (внутр.) и 9092 (внешн., который проброшен)
-      #      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-#
-#    # === JMX ===
-#      JMX_PORT: 9999
-#      KAFKA_JMX_OPTS: >-
-#        -Dcom.sun.management.jmxremote
-#        -Dcom.sun.management.jmxremote.local.only=false
-#        -Dcom.sun.management.jmxremote.authenticate=false
-#        -Dcom.sun.management.jmxremote.ssl=false
+
   redis:
     image: redis:7
     container_name: redis
@@ -110,6 +93,140 @@ services:
       - "9121:9121"
     depends_on:
       - redis
+
+  # =======================================================
+  # SPRING MICROSERVICES
+  # =======================================================
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: user-service
+    depends_on:
+      - eureka-server
+      - user-db
+      - redis
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-db:5432/user
+      SPRING_DATA_REDIS_HOST: redis
+    ports:
+      - "8088:8088"
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: inventory-service/Dockerfile
+    container_name: inventory-service
+    depends_on:
+      - eureka-server
+      - inventory-db
+      - kafka
+      - redis
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://inventory-db:5432/inventory
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+    ports:
+      - "8084:8084"
+
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    container_name: order-service
+    depends_on:
+      - eureka-server
+      - order-db
+      - kafka
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-db:5432/orders
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    ports:
+      - "8087:8087"
+
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: payment-service
+    depends_on:
+      - eureka-server
+      - payment-db
+      - kafka
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-db:5432/payments
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    ports:
+      - "8082:8082"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    container_name: notification-service
+    depends_on:
+      - eureka-server
+      - kafka
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+    ports:
+      - "8085:8085"
+
+  external-payment-gateway:
+    build:
+      context: .
+      dockerfile: external-payment-gateway/Dockerfile
+    container_name: external-payment-gateway
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8083:8083"
+
+  analytics-service:
+    build:
+      context: .
+      dockerfile: analytics-service/Dockerfile
+    container_name: analytics-service
+    depends_on:
+      - eureka-server
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8089:8089"
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    depends_on:
+      - eureka-server
+      - user-service
+      - order-service
+      - payment-service
+      - external-payment-gateway
+      - inventory-service
+      - notification-service
+      - analytics-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8080:8080"
 
 volumes:
   inventory-db-data:
