@@ -30,8 +30,8 @@ services:
     image: postgres:15
     container_name: order-db
     environment:
-      POSTGRES_PASSWORD: pass
-      POSTGRES_USER: user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
       POSTGRES_DB: orders
     ports:
       - "5435:5432" # Хост: 5435
@@ -42,8 +42,8 @@ services:
     image: postgres:15
     container_name: payment-db
     environment:
-      POSTGRES_PASSWORD: pass
-      POSTGRES_USER: user
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
       POSTGRES_DB: payments
     ports:
       - "5436:5432" # Хост: 5436
@@ -97,13 +97,13 @@ services:
   # =======================================================
   # SPRING MICROSERVICES
   # =======================================================
-  eureka-server:
-    build:
-      context: .
-      dockerfile: eureka-server/Dockerfile
-    container_name: eureka-server
-    ports:
-      - "8761:8761"
+  #  eureka-server:
+  #    build:
+  #      context: .
+  #      dockerfile: eureka-server/Dockerfile
+  #    container_name: eureka-server
+  #    ports:
+  #      - "8761:8761"
 
   user-service:
     build:
@@ -111,7 +111,7 @@ services:
       dockerfile: user-service/Dockerfile
     container_name: user-service
     depends_on:
-      - eureka-server
+      #      - eureka-server
       - user-db
       - redis
     environment:
@@ -127,7 +127,7 @@ services:
       dockerfile: inventory-service/Dockerfile
     container_name: inventory-service
     depends_on:
-      - eureka-server
+      #      - eureka-server
       - inventory-db
       - kafka
       - redis
@@ -145,7 +145,7 @@ services:
       dockerfile: order-service/Dockerfile
     container_name: order-service
     depends_on:
-      - eureka-server
+      #      - eureka-server
       - order-db
       - kafka
     environment:
@@ -161,7 +161,7 @@ services:
       dockerfile: payment-service/Dockerfile
     container_name: payment-service
     depends_on:
-      - eureka-server
+      #      - eureka-server
       - payment-db
       - kafka
     environment:
@@ -177,7 +177,7 @@ services:
       dockerfile: notification-service/Dockerfile
     container_name: notification-service
     depends_on:
-      - eureka-server
+      #      - eureka-server
       - kafka
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
@@ -190,8 +190,8 @@ services:
       context: .
       dockerfile: external-payment-gateway/Dockerfile
     container_name: external-payment-gateway
-    depends_on:
-      - eureka-server
+    #    depends_on:
+    #      - eureka-server
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     ports:
@@ -202,8 +202,8 @@ services:
       context: .
       dockerfile: analytics-service/Dockerfile
     container_name: analytics-service
-    depends_on:
-      - eureka-server
+    #    depends_on:
+    #      - eureka-server
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
     ports:
@@ -215,7 +215,7 @@ services:
       dockerfile: api-gateway/Dockerfile
     container_name: api-gateway
     depends_on:
-      - eureka-server
+      #      - eureka-server
       - user-service
       - order-service
       - payment-service

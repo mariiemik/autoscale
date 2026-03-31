@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-payment-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: external-payment-gateway
+  template:
+    metadata:
+      labels:
+        app: external-payment-gateway
+    spec:
+      containers:
+        - name: external-payment-gateway
+          image: autoscale-external-payment-gateway:latest   # твой образ должен быть собран и доступен
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8083
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-payment-gateway
+spec:
+  selector:
+    app: external-payment-gateway
+  ports:
+    - port: 8083       # порт, на который другие сервисы будут ходить
+      targetPort: 8083 # порт внутри контейнера
+  type: ClusterIP      # внутри кластера; для внешнего доступа можно сделать NodePort или LoadBalancer

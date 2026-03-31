@@ -15,11 +15,11 @@ public class WebClientConfig {
 
     @Bean
     public WebClient inventoryWebClient(WebClient.Builder builder) {
-        return builder.baseUrl("http://inventory-service").build(); // <-- Используем имя сервиса
+        return builder.baseUrl("http://inventory-service:8084").build(); // <-- Используем имя сервиса
     }
 
     @Bean
     public WebClient paymentWebClient(WebClient.Builder builder) {
-        return builder.baseUrl("http://external-payment-gateway").build(); // <-- Используем имя сервиса
+        return builder.baseUrl("http://external-payment-gateway:8083").build(); // <-- Используем имя сервиса
     }
 }

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics-service
+  template:
+    metadata:
+      labels:
+        app: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: autoscale-analytics-service:latest  # образ должен быть собран и доступен локально или в registry
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8089
+          env:
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://eureka-server:8761/eureka/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service
+spec:
+  selector:
+    app: analytics-service
+  ports:
+    - port: 8089       # порт внутри кластера
+      targetPort: 8089 # порт контейнера
+      nodePort: 32089
+  type: NodePort      # обычный сервис для внутреннего доступа
