@@ -1,0 +1,21 @@
+rules:
+  default: false
+
+  custom:
+    - seriesQuery: 'http_server_requests_seconds_count'
+      resources:
+        overrides:
+          namespace:
+            resource: namespace
+          pod:
+            resource: pod
+      name:
+        matches: "http_server_requests_seconds_count"
+        as: "http_requests_per_second"
+      metricsQuery: 'sum(rate(http_server_requests_seconds_count[1m])) by (pod)'
+
+prometheus:
+  url: http://prometheus-kube-prometheus-prometheus.default.svc
+  port: 9090
+
+# instruction for Prometheus Adapter, which metrics are extracted from Prometheus and how they are transformed

@@ -20,7 +20,7 @@ public class KafkaConsumerConfig {
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
-        String bootstrapAddress = "kafka:9092";
+        String bootstrapAddress = "kafka-service:9092";
 //        String bootstrapAddress = "host.docker.internal:9092"; /// Сейчас это для кафки запущенной докером и сервисы локально
 
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);

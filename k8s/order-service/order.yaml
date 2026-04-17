@@ -18,23 +18,35 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8087
+          ####for basic hpa (cpu, ram)####
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          ##############################
           env:
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://eureka-server:8761/eureka/"
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://order-postgres:5435/orders"
             - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka:29092"
+              value: "kafka-service:9092"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: order-service
+  labels:
+    app: order-service
 spec:
   selector:
     app: order-service
   ports:
-    - port: 8087       # порт внутри кластера
+    - name: http
+      port: 8087       # порт внутри кластера
       targetPort: 8087 # порт контейнера
       nodePort: 32087
   type: NodePort

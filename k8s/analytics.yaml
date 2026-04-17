@@ -30,7 +30,8 @@ spec:
   selector:
     app: analytics-service
   ports:
-    - port: 8089       # порт внутри кластера
+    - name: http
+      port: 8089       # порт внутри кластера
       targetPort: 8089 # порт контейнера
       nodePort: 32089
   type: NodePort      # обычный сервис для внутреннего доступа
