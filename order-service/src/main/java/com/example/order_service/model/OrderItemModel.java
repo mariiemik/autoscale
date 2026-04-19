@@ -20,10 +20,22 @@ public class OrderItemModel {
     @Column(name = "name")
     private String name;
 
-    public OrderItemModel(OrderIdAndInventoryItemIdPK idAndInventoryItemIdPK, int quantity, String name) {
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    @Column(name = "price")
+    private int price;
+
+    public OrderItemModel(OrderIdAndInventoryItemIdPK idAndInventoryItemIdPK, int quantity, String name, int price) {
         this.idAndInventoryItemIdPK = idAndInventoryItemIdPK;
         this.quantity = quantity;
         this.name = name;
+        this.price = price;
     }
 
     public OrderItemModel() {

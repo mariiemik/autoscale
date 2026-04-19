@@ -1,5 +1,6 @@
 package com.example.order_service.controller;
 
+import com.example.order_service.dto.OrderDetailsDTO;
 import com.example.order_service.dto.OrderRequestDTO;
 import com.example.order_service.dto.OrderResponseDTO;
 import com.example.order_service.service.OrderService;
@@ -67,6 +68,13 @@ public class OrderController {
     public ResponseEntity<List<OrderResponseDTO>> getAllOrders() {
         List<OrderResponseDTO> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
+    }
+
+    @Operation(summary = "Список всех заказов", description = "Возвращает список всех заказов, но без продуктов в заказе")
+    @ApiResponse(responseCode = "200", description = "Информация о зкаказе получена")
+    @GetMapping("/order/details/{id}")
+    public OrderDetailsDTO getOrderDetails(@PathVariable String id) {
+        return orderService.getOrderDetails(id);
     }
 
 
