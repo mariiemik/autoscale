@@ -70,10 +70,12 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    @Operation(summary = "Список всех заказов", description = "Возвращает список всех заказов, но без продуктов в заказе")
+    @Operation(summary = "Информация о заказе", description = "Возвращает имя пользователя, статус оплаты, список товаров")
     @ApiResponse(responseCode = "200", description = "Информация о зкаказе получена")
-    @GetMapping("/order/details/{id}")
+    @GetMapping("/details/{id}")
     public OrderDetailsDTO getOrderDetails(@PathVariable String id) {
+        log.info("/order/details/{id} request START");
+
         return orderService.getOrderDetails(id);
     }
 

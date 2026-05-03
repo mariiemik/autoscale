@@ -7,7 +7,7 @@ import org.springframework.context.annotation.ComponentScan;
 //@EnableCaching
 //@EnableDiscoveryClient
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.example.inventory_service",  // 👈 Обязательно добавьте пакет вашего приложения
+@ComponentScan(basePackages = {"com.example.inventory_service",
         "com.example.common.config"})
 public class InventoryServiceApplication {
 

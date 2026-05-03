@@ -74,8 +74,6 @@
             <artifactId>spring-kafka-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--		addddddddd
-       есчо не должно быть еврика сервера-->
 
         <dependency>
             <groupId>org.springframework.cloud</groupId>

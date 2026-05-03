@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: autoscale-notification-service:latest # Docker образ должен быть собран заранее
-          imagePullPolicy: Never
+          image: autoscale-notification-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8085
           env:

@@ -1,53 +1,52 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: payment-service
+  name: user-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: payment-service
+      app: user-service
   template:
     metadata:
       labels:
-        app: payment-service
+        app: user-service
     spec:
       containers:
-        - name: payment-service
-          image: autoscale-payment-service:latest
-          imagePullPolicy: Never
+        - name: user-service
+          image: autoscale-user-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8082
+            - containerPort: 8088
           ####for basic hpa (cpu, ram)####
           resources:
             requests:
               cpu: "100m"
-              memory: "128Mi"
+              memory: "384Mi"
             limits:
               cpu: "500m"
-              memory: "256Mi"
+              memory: "512Mi"
           ##############################
           env:
             - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
               value: "http://eureka-server:8761/eureka/"
             - name: SPRING_DATASOURCE_URL
-              value: "jdbc:postgresql://payment-postgres:5436/payments"
-            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka-service:9092"
+              value: "jdbc:postgresql://user-postgres:5434/user"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: payment-service
+  name: user-service
   labels:
-    app: payment-service
+    app: user-service
 spec:
   selector:
-    app: payment-service
+    app: user-service
   ports:
     - name: http
-      protocol: TCP
-      port: 8082
-      targetPort: 8082
-      nodePort: 32082
+      port: 8088
+      targetPort: 8088
+      nodePort: 32088
   type: NodePort

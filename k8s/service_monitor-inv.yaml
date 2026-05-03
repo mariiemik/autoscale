@@ -1,9 +1,9 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: payment-service-monitor
+  name: inventory-service-monitor
   labels:
-    release: prometheus   # ← КРИТИЧНО
+    release: monitoring
     app.kubernetes.io/part-of: kube-prometheus-stack
 spec:
   namespaceSelector:
@@ -11,7 +11,7 @@ spec:
       - default
   selector:
     matchLabels:
-      app: payment-service
+      app: inventory-service
   endpoints:
     - port: http
       path: /actuator/prometheus

@@ -45,7 +45,8 @@ public class PaymentKafkaListener {
                         for (OrderItemEvent itemEvent : itemsReservedEvent.getItems()) {
                             totalPrice += itemEvent.getPrice() * itemEvent.getQuantity();
                         }
-                        paymentService.payForOrder(itemsReservedEvent.getOrderId(), totalPrice);
+//                        paymentService.payForOrder(itemsReservedEvent.getOrderId(), totalPrice);
+                        paymentService.createPayment(itemsReservedEvent.getOrderId(), totalPrice);
                     });
                 }
 

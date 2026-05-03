@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: external-payment-gateway
-          image: autoscale-external-payment-gateway:latest   # твой образ должен быть собран и доступен
-          imagePullPolicy: Never
+          image: autoscale-external-payment-gateway:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8083
           env:

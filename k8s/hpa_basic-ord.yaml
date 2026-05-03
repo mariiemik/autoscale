@@ -1,15 +1,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: user-service-hpa-basic
+  name: order-service-hpa-basic
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: user-service
+    name: order-service
 
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
 
   metrics:
     - type: Resource
@@ -17,4 +17,11 @@ spec:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 50
+          averageUtilization: 60
+
+#    - type: Resource
+#      resource:
+#        name: memory
+#        target:
+#          type: Utilization
+#          averageUtilization: 90

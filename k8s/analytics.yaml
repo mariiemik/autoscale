@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: analytics-service
-          image: autoscale-analytics-service:latest  # образ должен быть собран и доступен локально или в registry
-          imagePullPolicy: Never
+          image: autoscale-analytics-service:v2
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8089
           env:

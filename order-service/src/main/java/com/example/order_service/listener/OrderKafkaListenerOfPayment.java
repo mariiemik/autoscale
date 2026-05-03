@@ -66,8 +66,6 @@ public class OrderKafkaListenerOfPayment {
                         OrderConfirmedEvent event = new OrderConfirmedEvent(paymentConfirmedEvent.getOrderId(), userId, paymentConfirmedEvent.getPrice(), orderService.getOrderById(paymentConfirmedEvent.getOrderId()).items().stream().map(x -> new OrderItemEvent(x.itemId(), x.quantity(), x.price())).toList());
                         log.debug("event = {} eventType = {}", event, event.getType());
                         sendEvent("orders-topic", event.getOrderId(), event);
-                        //TODO notification
-
                     }
                     case PAYMENT_FAILED -> {
                         PaymentFailedEvent paymentFailedEvent = objectMapper.convertValue(rawEvent, PaymentFailedEvent.class);
@@ -79,8 +77,6 @@ public class OrderKafkaListenerOfPayment {
                         log.debug("event = {}, eventType = {}", event, event.getType());
 
                         sendEvent("orders-topic", event.getOrderId(), event);
-                        //TODO notification
-
                     }
 
                 }

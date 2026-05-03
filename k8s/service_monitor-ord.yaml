@@ -3,7 +3,7 @@ kind: ServiceMonitor
 metadata:
   name: order-service-monitor
   labels:
-    release: prometheus   # ← КРИТИЧНО
+    release: monitoring
     app.kubernetes.io/part-of: kube-prometheus-stack
 
 spec:

@@ -50,7 +50,6 @@ public class OrderKafkaListenerOfInventory {
             EventType type = EventType.valueOf(eventTypeName);
 
             if (type == EventType.ITEM_RESERVATION_CANCELLED) {
-//                ItemsReservationCancelledEvent itemsReservationCancelledEvent = objectMapper.treeToValue(rootNode, ItemsReservationCancelledEvent.class);
                 ItemsReservationCancelledEvent itemsReservationCancelledEvent = objectMapper.convertValue(rawEvent, ItemsReservationCancelledEvent.class);
                 log.debug("обработка события ITEM_RESERVATION_CANCELLED ");
                 eventProcessingTimer.record(() ->
@@ -58,7 +57,6 @@ public class OrderKafkaListenerOfInventory {
                 );
 //                OrderCreatedEvent event = new OrderCreatedEvent(order.getOrderId(), order.getUserId(), orderItemEventList);
 //                kafkaTemplate.send("orders-topic", event.getOrderId(), event);
-//TODO увед что не хватило товара
 
             }
 

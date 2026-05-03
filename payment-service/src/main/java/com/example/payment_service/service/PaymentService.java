@@ -22,11 +22,14 @@ public class PaymentService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final WebClient paymentWebClient; // 1. Объявление
     private final PaymentRepository paymentRepository;
+    private final PaymentAsyncService paymentAsyncService;
 
-    public PaymentService(PaymentRepository paymentRepository, KafkaTemplate<String, Object> kafkaTemplate, WebClient paymentWebClient) {
+    public PaymentService(PaymentRepository paymentRepository, KafkaTemplate<String, Object> kafkaTemplate,
+                          WebClient paymentWebClient, PaymentAsyncService paymentAsyncService) {
         this.paymentRepository = paymentRepository;
         this.kafkaTemplate = kafkaTemplate;
         this.paymentWebClient = paymentWebClient;
+        this.paymentAsyncService = paymentAsyncService;
     }
 
     private void sendEvent(String topic, String key, Object event) {
@@ -49,6 +52,7 @@ public class PaymentService {
                 .block();
         PaymentModel paymentModel = new PaymentModel(orderId, totalPrice, PaymentStatus.IN_PROGRESS);
         paymentRepository.save(paymentModel);
+        log.info("SAVED PAYMENT: orderId={}, status={}", orderId, PaymentStatus.IN_PROGRESS);
         log.debug("{}", paymentResponse.paymentStatus());
         switch (paymentResponse.paymentStatus()) {
             case SUCCESS -> {
@@ -69,4 +73,16 @@ public class PaymentService {
 
         return paymentResponse;
     }
+
+    @Transactional
+    public void createPayment(String orderId, int totalPrice) {
+        log.info("createPayment for orderId={}", orderId);
+
+        PaymentModel payment = new PaymentModel(orderId, totalPrice, PaymentStatus.IN_PROGRESS);
+        paymentRepository.save(payment);
+
+        paymentAsyncService.processPaymentAsync(orderId, totalPrice);
+    }
+
+
 }

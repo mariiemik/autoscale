@@ -16,70 +16,9 @@ import java.util.HashSet;
 @Configuration
 @EnableCaching
 public class RedisConfig {
-    @Value("${app.cache.names:}") // Берем имена из пропертей сервиса
+    @Value("${app.cache.names:}")
     private String[] cacheNames;
 
-//    @Bean
-//    public io.micrometer.core.instrument.binder.MeterBinder redisCacheMetricsBinder(RedisCacheManager cacheManager) {
-//        return (registry) -> {
-//            // Это свяжет менеджер с Prometheus
-//        };
-//    }
-
-//    @Bean
-//    public MeterBinder redisCacheMetricsBinder(RedisCacheManager cacheManager) {
-//        return (registry) -> {
-//            if (cacheNames != null) {
-//                for (String name : cacheNames) {
-//                    org.springframework.cache.Cache cache = cacheManager.getCache(name.trim());
-//                    if (cache != null) {
-//                        // Мы используем встроенный механизм регистрации через Spring
-//                        // Если RedisCacheMetrics недоступен, Spring сам подцепит статистику
-//                        // через .enableStatistics() в бине cacheManager.
-//                    }
-//                }
-//            }
-//        };
-//    }
-//@Bean
-//public MeterBinder redisCacheMetricsBinder(RedisCacheManager cacheManager) {
-//    return (registry) -> {
-//        if (cacheNames != null) {
-//            for (String name : cacheNames) {
-//                org.springframework.cache.Cache cache = cacheManager.getCache(name.trim());
-//                if (cache != null) {
-//                    // Статический метод monitor сам разберется с типами и аргументами
-//                    io.micrometer.core.instrument.binder.cache.RedisCacheMetrics.monitor(
-//                            registry,
-//                            (org.springframework.data.redis.cache.RedisCache) cache,
-//                            name.trim()
-//                    );
-//                }
-//            }
-//        }
-//    };
-//}
-
-    //    @Bean
-//    public MeterBinder redisCacheMetricsBinder(RedisCacheManager cacheManager) {
-//        return (registry) -> {
-//            if (cacheNames != null) {
-//                for (String name : cacheNames) {
-//                    // Пытаемся получить кэш
-//                    org.springframework.cache.Cache cache = cacheManager.getCache(name.trim());
-//                    if (cache != null) {
-//                        // Регистрируем через стандартный регистратор Micrometer для Spring Cache
-//                        io.micrometer.core.instrument.binder.cache.CacheMetricsRegistrar.monitor(
-//                                registry,
-//                                cache,
-//                                name.trim(),
-//                                java.util.Collections.emptyList()
-//                        );
-//                    }
-//                }
-//            }
-//        };
-//    }
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
@@ -95,7 +34,6 @@ public class RedisConfig {
 //            builder.initialCacheNames(new HashSet<>(Arrays.asList(cacheNames)));
 //        }
         if (cacheNames != null && cacheNames.length > 0) {
-            // Явно указываем String, чтобы не ругалась старая Java
             builder.initialCacheNames(new HashSet<String>(Arrays.asList(cacheNames)));
         }
 

@@ -27,14 +27,10 @@ public class KafkaConsumerConfig {
         String groupId = "multi-event-service-group";
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
 
-        // Десериализатор КЛЮЧА
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
-        // Десериализатор ЗНАЧЕНИЯ (Новый JsonDeserializer)
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
 
-        // Указываем, какие классы (пакеты) можно безопасно десериализовать
-        // ВАЖНО: Пакет, где находятся ВСЕ ваши классы событий
 
         String trustedPackages = "com.example.project.common.events";
         props.put(JsonDeserializer.TRUSTED_PACKAGES, trustedPackages);
@@ -44,7 +40,6 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
-    // Конфигурация Фабрики Контейнеров для @KafkaListener
     @Bean
 //    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
